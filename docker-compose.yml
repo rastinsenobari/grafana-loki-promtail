@@ -1,0 +1,67 @@
+version: '3.1'
+
+networks:
+  grafana:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.15.1.0/24
+
+services:
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - 3100:3100
+    volumes:
+      - ./config/loki-config/local-config.yaml:/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      grafana:
+        ipv4_address: 172.15.1.13
+    restart: always
+
+  promtail:
+    image: grafana/promtail:latest
+    volumes:
+      - ./logs:/var/log
+      - ./config/promtail-config:/etc/promtail
+    command: -config.file=/etc/promtail/promtail.yaml
+    networks:
+      grafana:
+        ipv4_address: 172.15.1.14
+    restart: always
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        mkdir -p /etc/grafana/provisioning/datasources
+        cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
+        apiVersion: 1
+        datasources:
+        - name: Loki
+          type: loki
+          access: proxy
+          orgId: 1
+          url: http://172.15.1.13:3100
+          basicAuth: false
+          isDefault: true
+          version: 1
+          editable: false
+        EOF
+        /run.sh
+    ports:
+      - "3000:3000"
+    networks:
+      grafana:
+        ipv4_address: 172.15.1.15
+    restart: always
+
+              
