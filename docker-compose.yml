@@ -8,6 +8,9 @@ networks:
       config:
         - subnet: 172.15.1.0/24
 
+volumes:
+  grafana-storage:
+
 services:
   loki:
     image: grafana/loki:latest
@@ -38,6 +41,8 @@ services:
       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    volumes:
+      - grafana-storage:/var/lib/grafana
     entrypoint:
       - sh
       - -euc
