@@ -55,7 +55,7 @@ services:
           type: loki
           access: proxy
           orgId: 1
-          url: http://172.15.1.13:3100
+          url: http://loki:3100
           basicAuth: false
           isDefault: true
           version: 1
